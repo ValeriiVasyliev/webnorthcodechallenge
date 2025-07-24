@@ -1,0 +1,11 @@
+node_modules/
+vendor/
+deps/
+package-lock.json
+composer.lock
+composer-deps.lock
+.phpcs.cache
+.phpunit.cache/
+coverage/
+coverage.xml
+dummy-plugin-dir/
