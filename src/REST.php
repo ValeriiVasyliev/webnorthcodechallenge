@@ -70,10 +70,17 @@ class REST {
 				'callback'            => array( $this, 'get_weather_station' ),
 				'permission_callback' => '__return_true',
 				'args'                => array(
-					'id' => array(
+					'id'    => array(
 						'required'          => true,
 						'validate_callback' => function ( $param ) {
 							return is_numeric( $param );
+						},
+					),
+					'units' => array(
+						'required'          => false,
+						'default'           => 'metric',
+						'sanitize_callback' => function ( $param ) {
+							return in_array( $param, array( 'metric', 'imperial' ), true ) ? $param : 'metric';
 						},
 					),
 				),
@@ -126,6 +133,25 @@ class REST {
 			'id'    => $post->ID,
 			'title' => $post->post_title,
 		);
+
+		// Get lat, lng from post meta.
+		$lat = get_post_meta( $post->ID, 'lat', true );
+		$lng = get_post_meta( $post->ID, 'lng', true );
+
+		if ( ! empty( $lat ) && ! empty( $lng ) ) {
+
+			$units = $request->get_param( 'units' ) ?: 'metric';
+
+			// Get weather data from the API.
+			$api = $this->plugin->get_api()->get_weather( (float) $lat, (float) $lng, $units );
+
+			if ( ! $api ) {
+				return new WP_Error( 'weather_data_error', __( 'Could not retrieve weather data.', 'webnorthcodechallenge' ), array( 'status' => 500 ) );
+			}
+
+			// Merge the weather data into the response.
+			$data['weather'] = $api;
+		}
 
 		return new WP_REST_Response( $data, 200 );
 	}

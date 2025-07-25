@@ -93,7 +93,7 @@ class Front {
 				'webnorthcodechallenge-style',
 				plugins_url( 'styles/css/style.css', WEBNORTH_CODE_CHALLENGE_PLUGIN_FILE ),
 				array(),
-				filemtime( plugin_dir_path( WEBNORTH_CODE_CHALLENGE_PLUGIN_FILE ) . 'styles/css/style.css' )
+				filemtime( $this->plugin->plugin_dir() . '/styles/css/style.css' )
 			);
 
 			// Leaflet JS
@@ -146,7 +146,7 @@ class Front {
 				'webnorthCodeChallengeSettings',
 				array(
 					'nonce'            => wp_create_nonce( 'wp_rest' ),
-					'rest_url'         => rest_url( 'fever-code-challenge/v1/pokemon' ),
+					'rest_url'         => rest_url( 'webnorthcodechallenge/v1/' ),
 					'weather_stations' => $weather_stations,
 				)
 			);
