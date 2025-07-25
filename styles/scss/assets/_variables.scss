@@ -1,0 +1,23 @@
+$primaryDark: #28282c;
+$textWhite: #eeeeee;
+$textGray: #757575;
+
+.text-white {
+    color: $textWhite;
+}
+.text-gray {
+    color: $textGray;
+}
+.fw-600 {
+    font-weight: 600;
+}
+
+.mt-10 {
+    margin-top: 10px;
+}
+.mt-30 {
+    margin-top: 20px;
+}
+.mt-50 {
+    margin-top: 50px;
+}
