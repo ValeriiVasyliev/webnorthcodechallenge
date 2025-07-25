@@ -74,6 +74,9 @@ class Plugin {
 
 		// Register custom post type for weather stations.
 		add_action( 'init', array( $this, 'register_weather_station_post_type' ) );
+
+		// Add custom action links to the plugin listing.
+		add_filter( 'plugin_action_links_' . WEBNORTH_CODE_CHALLENGE_PLUGIN_FILE, array( $this, 'add_plugin_action_links' ) );
 	}
 
 	/**
@@ -167,5 +170,23 @@ class Plugin {
 	 */
 	public function get_api(): IAPI {
 		return $this->api;
+	}
+
+	/**
+	 * Add custom action links to the plugin listing.
+	 *
+	 * @param array $links Existing action links.
+	 * @return array Modified action links.
+	 */
+	public function add_plugin_action_links( array $links ): array {
+		$settings_link = sprintf(
+			'<a href="%s">%s</a>',
+			admin_url( 'options-general.php#wncc_weather_settings_section' ),
+			__( 'Settings', 'webnorthcodechallenge' )
+		);
+
+		array_unshift( $links, $settings_link );
+
+		return $links;
 	}
 }

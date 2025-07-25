@@ -13,6 +13,8 @@ use WebNorthCodeChallenge\Interfaces\IAPI;
  */
 class OpenWeatherAPI implements IAPI {
 
+	const API_URL = 'https://api.openweathermap.org/data/2.5/';
+
 	/**
 	 * Recursively sanitize data.
 	 *
