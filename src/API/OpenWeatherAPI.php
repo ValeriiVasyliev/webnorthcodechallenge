@@ -37,16 +37,4 @@ class OpenWeatherAPI implements IAPI {
 
 		return $data;
 	}
-
-	/**
-	 * Wrapper to fetch data using the shared caching helper.
-	 *
-	 * @param string $url API endpoint.
-	 * @param string $transient_key Cache key.
-	 * @param bool   $force Force refresh.
-	 * @return array
-	 */
-	public function get_weather_data( string $url, string $transient_key, bool $force = false ): array {
-		return APICacheHelper::fetch_and_cache( $url, $transient_key, array( $this, 'sanitize_data' ), $force );
-	}
 }

@@ -7,58 +7,46 @@
 
 namespace WebNorthCodeChallenge\API;
 
-use Exception;
-
 /**
- * Class to handle API data fetching and caching.
+ * Class to handle storing, retrieving, and clearing cached API data.
  */
 class APICacheHelper {
 
-	private const TRANSIENT_EXPIRATION = 600;
+	/**
+	 * Cache expiration in seconds (default: 1 day).
+	 */
+	private const TRANSIENT_EXPIRATION = 86400;
 
 	/**
-	 * Fetch and cache data from a given API URL.
+	 * Retrieve cached data by transient key.
 	 *
-	 * @param string   $url            API endpoint.
-	 * @param string   $transient_key  Cache key.
-	 * @param callable $sanitizer      Optional callback to sanitize data.
-	 * @param bool     $force_refresh  Force refresh from API.
-	 * @return array
+	 * @param string $transient_key Cache key.
+	 * @return array Cached data or empty array if not found or invalid.
 	 */
-	public static function fetch_and_cache(
-		string $url,
-		string $transient_key,
-		callable $sanitizer = null,
-		bool $force_refresh = false
-	): array {
+	public static function get( string $transient_key ): array {
 		$cached = get_transient( $transient_key );
-
-		if ( false === $cached || $force_refresh ) {
-			try {
-				$response = wp_remote_get( $url );
-				if (
-					! is_wp_error( $response ) &&
-					200 === wp_remote_retrieve_response_code( $response )
-				) {
-					$data = json_decode( $response['body'], true, 512, JSON_THROW_ON_ERROR );
-
-					if ( is_array( $data ) ) {
-						if ( $sanitizer ) {
-							$data = call_user_func( $sanitizer, $data );
-						}
-
-						set_transient( $transient_key, $data, self::TRANSIENT_EXPIRATION );
-						return $data;
-					}
-				}
-			} catch ( Exception $ex ) {
-				if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
-					error_log( 'API cache error: ' . $ex->getMessage() );
-				}
-			}
-			return array();
-		}
-
 		return is_array( $cached ) ? $cached : array();
+	}
+
+	/**
+	 * Store data in cache using a transient key.
+	 *
+	 * @param string $transient_key Cache key.
+	 * @param array  $data          Data to cache.
+	 * @param int    $expiration    Optional. Expiration time in seconds. Default is class constant.
+	 * @return bool True if the transient was set, false otherwise.
+	 */
+	public static function set( string $transient_key, array $data, int $expiration = self::TRANSIENT_EXPIRATION ): bool {
+		return set_transient( $transient_key, $data, $expiration );
+	}
+
+	/**
+	 * Clear cached data by transient key.
+	 *
+	 * @param string $transient_key Cache key.
+	 * @return bool True if the transient was deleted.
+	 */
+	public static function clear( string $transient_key ): bool {
+		return delete_transient( $transient_key );
 	}
 }
