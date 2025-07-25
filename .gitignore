@@ -9,3 +9,4 @@ composer-deps.lock
 coverage/
 coverage.xml
 dummy-plugin-dir/
+html/
