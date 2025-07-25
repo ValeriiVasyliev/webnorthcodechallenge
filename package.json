@@ -10,7 +10,7 @@
   "scripts": {
     "compile": "sass --watch styles/scss/:styles/css/ --no-source-map --style=compressed --silence-deprecation=import",
     "prefix": "postcss --watch styles/css/*.css --no-map --use autoprefixer --dir styles/css/",
-    "minify:js": "mkdir -p js/min && for f in js/*.js; do uglifyjs \"$f\" -c -m -o \"${f%.js}.min.js\"; done",
+    "minify:js": "mkdir -p js/min && for f in js/*.js; do case \"$f\" in *.min.js) ;; *) uglifyjs \"$f\" -c -m -o \"js/min/$(basename \"${f%.js}.js\")\" ;; esac; done",
     "dev": "npm-run-all --parallel compile prefix",
     "build:compile": "sass styles/scss/:styles/css/ --no-source-map --style=compressed --silence-deprecation=import",
     "build:prefix": "postcss styles/css/*.css --no-map --use autoprefixer --dir styles/css/",

@@ -88,6 +88,12 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
     function updateSidebar(lat, lng, title = '', stationId = '') {
+
+        // Change url to #stationId to avoid reloading the page
+        if (stationId) {
+            window.location.hash = `#${stationId}`;
+        }
+
         const sidebar = document.querySelector('#sidebarContent');
         if (!sidebar) return;
 
