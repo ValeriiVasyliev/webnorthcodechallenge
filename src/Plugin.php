@@ -71,6 +71,9 @@ class Plugin {
 	 */
 	protected function register_hooks(): void {
 		$this->load_plugin_textdomain();
+
+		// Register custom post type for weather stations.
+		add_action( 'init', array( $this, 'register_weather_station_post_type' ) );
 	}
 
 	/**
@@ -87,6 +90,46 @@ class Plugin {
 			false,
 			dirname( plugin_basename( __FILE__ ) ) . '/../languages/'
 		);
+	}
+
+	/**
+	 * Register custom post type for weather stations.
+	 */
+	public function register_weather_station_post_type(): void {
+		$labels = array(
+			'name'               => __( 'Weather Stations', 'webnorthcodechallenge' ),
+			'singular_name'      => __( 'Weather Station', 'webnorthcodechallenge' ),
+			'menu_name'          => __( 'Weather Stations', 'webnorthcodechallenge' ),
+			'name_admin_bar'     => __( 'Weather Station', 'webnorthcodechallenge' ),
+			'add_new'            => __( 'Add New', 'webnorthcodechallenge' ),
+			'add_new_item'       => __( 'Add New Weather Station', 'webnorthcodechallenge' ),
+			'new_item'           => __( 'New Weather Station', 'webnorthcodechallenge' ),
+			'edit_item'          => __( 'Edit Weather Station', 'webnorthcodechallenge' ),
+			'view_item'          => __( 'View Weather Station', 'webnorthcodechallenge' ),
+			'all_items'          => __( 'All Weather Stations', 'webnorthcodechallenge' ),
+			'search_items'       => __( 'Search Weather Stations', 'webnorthcodechallenge' ),
+			'not_found'          => __( 'No weather stations found.', 'webnorthcodechallenge' ),
+			'not_found_in_trash' => __( 'No weather stations found in Trash.', 'webnorthcodechallenge' ),
+		);
+
+		$args = array(
+			'labels'              => $labels,
+			'public'              => false,
+			'show_ui'             => true,
+			'show_in_menu'        => true,
+			'query_var'           => true,
+			'rewrite'             => false,
+			'publicly_queryable'  => false,
+			'exclude_from_search' => true,
+			'show_in_nav_menus'   => false,
+			'capability_type'     => 'post',
+			'has_archive'         => false,
+			'hierarchical'        => false,
+			'menu_position'       => 5,
+			'supports'            => array( 'title', 'custom-fields' ),
+		);
+
+		register_post_type( 'weather_station', $args );
 	}
 
 	/**
