@@ -15,7 +15,6 @@ use Exception;
  * Handles interaction with the OpenWeather API.
  */
 class OpenWeatherAPI implements IAPI {
-
 	private const API_URL          = 'https://api.openweathermap.org/data/2.5/weather';
 	private const TRANSIENT_PREFIX = 'openweather_weather_';
 
@@ -46,13 +45,13 @@ class OpenWeatherAPI implements IAPI {
 	public function get_weather( float $latitude, float $longitude, string $units = 'metric' ): array|false {
 		$cache_key = self::TRANSIENT_PREFIX . $latitude . '_' . $longitude . '_' . $units;
 
-		// Try to load from cache
+		// Try to load from cache.
 		$cached_data = APICacheHelper::get( $cache_key );
 		if ( ! empty( $cached_data ) ) {
 			return $cached_data;
 		}
 
-		// Prepare query params
+		// Prepare query parameters.
 		$query_args = array(
 			'lat'   => $latitude,
 			'lon'   => $longitude,
@@ -60,29 +59,26 @@ class OpenWeatherAPI implements IAPI {
 			'appid' => $this->api_key,
 		);
 
-		// Fetch from API
+		// Fetch from API.
 		try {
 			$response = wp_remote_get( add_query_arg( $query_args, self::API_URL ), array( 'timeout' => 15 ) );
-
 			if ( is_wp_error( $response ) ) {
 				return false;
 			}
 
 			$code = wp_remote_retrieve_response_code( $response );
-			if ( $code !== 200 ) {
+			if ( 200 !== $code ) { // Yoda condition applied.
 				return false;
 			}
 
-			$body   = wp_remote_retrieve_body( $response );
-			$result = json_decode( $body, true, 512, JSON_THROW_ON_ERROR );
-
+			$body      = wp_remote_retrieve_body( $response );
+			$result    = json_decode( $body, true, 512, JSON_THROW_ON_ERROR );
 			$sanitized = $this->sanitize_data( $result );
 
-			// Save to cache
+			// Save to cache.
 			APICacheHelper::set( $cache_key, $sanitized );
 
 			return $sanitized;
-
 		} catch ( \JsonException | Exception $e ) {
 			// Optional: log the error here.
 			return false;

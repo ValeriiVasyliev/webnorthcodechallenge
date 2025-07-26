@@ -17,7 +17,6 @@ use WP_Query;
  * Class REST
  */
 class REST {
-
 	/**
 	 * REST namespace.
 	 */
@@ -59,9 +58,7 @@ class REST {
 	 * @return void
 	 */
 	public function register_rest_routes(): void {
-
-		// Register route for weather-station/${id}
-
+		// Register route for weather-station/${id}.
 		register_rest_route(
 			self::REST_NAMESPACE,
 			'/weather-station/(?P<id>\d+)',
@@ -96,7 +93,6 @@ class REST {
 	 * @return WP_REST_Response|WP_Error
 	 */
 	public function get_weather_station( WP_REST_Request $request ): WP_REST_Response|WP_Error {
-
 		// Verify nonce for security.
 		if ( ! wp_verify_nonce( sanitize_text_field( $request->get_header( 'X-WP-Nonce' ) ?? '' ), 'wp_rest' ) ) {
 			return new WP_Error( 'invalid_request', __( 'Invalid request.', 'webnorthcodechallenge' ) );
@@ -139,8 +135,7 @@ class REST {
 		$lng = get_post_meta( $post->ID, 'lng', true );
 
 		if ( ! empty( $lat ) && ! empty( $lng ) ) {
-
-			$units = $request->get_param( 'units' ) ?: 'metric';
+			$units = $request->get_param( 'units' ) ? $request->get_param( 'units' ) : 'metric'; // Replaced short ternary.
 
 			// Get weather data from the API.
 			$api = $this->plugin->get_api()->get_weather( (float) $lat, (float) $lng, $units );

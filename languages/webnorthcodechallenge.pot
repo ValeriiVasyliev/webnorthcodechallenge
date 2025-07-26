@@ -9,7 +9,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2025-07-25T22:56:06+00:00\n"
+"POT-Creation-Date: 2025-07-26T09:00:43+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: webnorthcodechallenge\n"
@@ -93,19 +93,19 @@ msgstr ""
 msgid "Settings"
 msgstr ""
 
-#: src/REST.php:102
+#: src/REST.php:98
 msgid "Invalid request."
 msgstr ""
 
-#: src/REST.php:110
+#: src/REST.php:106
 msgid "Invalid station ID."
 msgstr ""
 
-#: src/REST.php:125
+#: src/REST.php:121
 msgid "Weather station not found."
 msgstr ""
 
-#: src/REST.php:149
+#: src/REST.php:144
 msgid "Could not retrieve weather data."
 msgstr ""
 
@@ -126,28 +126,27 @@ msgstr ""
 msgid "Click on the map to get weather data"
 msgstr ""
 
-#: js/min/script.js:1
-#: js/script.js:186
+#: js/min/script.js:5
+#: js/script.js:54
+msgid "Weather Data"
+msgstr ""
+
+#: js/min/script.js:6
+#: js/script.js:146
 msgid "Celcius"
 msgstr ""
 
-#: js/min/script.js:1
-#: js/script.js:190
+#: js/min/script.js:7
+#: js/script.js:147
 msgid "Fahrenheit"
 msgstr ""
 
-#: js/min/script.js:6
-#: js/script.js:102
-#: js/script.js:110
+#: js/min/script.js:10
+#: js/script.js:191
 msgid "Latitude"
 msgstr ""
 
-#: js/min/script.js:6
-#: js/script.js:103
-#: js/script.js:111
+#: js/min/script.js:10
+#: js/script.js:192
 msgid "Longitude"
-msgstr ""
-
-#: js/script.js:57
-msgid "Weather Data"
 msgstr ""

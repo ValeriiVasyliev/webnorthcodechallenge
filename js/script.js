@@ -4,13 +4,66 @@ if (typeof wp !== 'undefined' && wp.i18n && typeof __ === 'undefined') {
     var __ = wp.i18n.__;
 }
 
-// Get the settings from the global variable
-const getWebNorthCodeChallengeSettings = () => {
-    return {
-        'restUrl': webnorthCodeChallengeSettings?.rest_url ?? '',
-        'nonce': webnorthCodeChallengeSettings?.nonce ?? ''
-    };
-}
+const LOCAL_STORAGE_KEY = 'savedStations';
+
+const getSavedStations = () => {
+    try {
+        const raw = localStorage.getItem(LOCAL_STORAGE_KEY);
+        return raw ? JSON.parse(raw) : [];
+    } catch {
+        return [];
+    }
+};
+
+const saveStationToLocal = (id) => {
+    const saved = new Set(getSavedStations());
+    saved.add(String(id));
+    localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify([...saved]));
+};
+
+const removeStationFromLocal = (id) => {
+    const saved = new Set(getSavedStations());
+    saved.delete(String(id));
+    localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify([...saved]));
+};
+
+const isStationSaved = (id) => {
+    return getSavedStations().includes(String(id));
+};
+
+
+const getWebNorthCodeChallengeSettings = () => ({
+    restUrl: webnorthCodeChallengeSettings?.rest_url ?? '',
+    nonce: webnorthCodeChallengeSettings?.nonce ?? ''
+});
+
+const renderWeatherData = (data) => {
+    const sidebarContent = document.querySelector('#sidebarCityContent');
+    if (!sidebarContent) return;
+
+    sidebarContent.innerHTML = `
+        <div class="loading">
+            <div class="loader"></div>
+        </div>
+    `;
+
+    requestAnimationFrame(() => {
+        setTimeout(() => {
+            sidebarContent.innerHTML = '';
+            const title = document.createElement('h3');
+            title.textContent = data.title || __('Weather Data', 'webnorthcodechallenge');
+            sidebarContent.appendChild(title);
+
+            for (const [key, value] of Object.entries(data.weather.main)) {
+                const p = document.createElement('p');
+                const capitalizedKey = key.charAt(0).toUpperCase() + key.slice(1);
+                p.innerHTML = `<span class="fw-600">${capitalizedKey}:</span> ${value}`;
+                sidebarContent.appendChild(p);
+            }
+        }, 300);
+    });
+};
+
 const loadWeatherData = async (id, units = 'metric') => {
     const { restUrl, nonce } = getWebNorthCodeChallengeSettings();
     if (!restUrl || !nonce) {
@@ -23,61 +76,96 @@ const loadWeatherData = async (id, units = 'metric') => {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',
-                'X-WP-Nonce': nonce,
-            },
+                'X-WP-Nonce': nonce
+            }
         });
 
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-
+        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
         const data = await response.json();
-        if (!data) {
+        if (!data || !data.weather) {
             console.warn('No weather data found for station ID:', id);
             return null;
         }
 
-        const weatherData = data.weather;
-
-        // Render weather data
-        const sidebarContent = document.querySelector('#sidebarCityContent');
-        if (sidebarContent) {
-
-            sidebarContent.innerHTML = `
-    <div class="loading">
-        <div class="loader"></div>
-    </div>
-`;
-            setTimeout(() => {
-                // Simulate smooth transition (optional delay for demo effect)
-                sidebarContent.innerHTML = '';
-
-                // Add title
-                const title = document.createElement('h3');
-                title.textContent = data.title || __('Weather Data', 'webnorthcodechallenge');
-                sidebarContent.appendChild(title);
-
-                for (const [key, value] of Object.entries(weatherData.main)) {
-                    const p = document.createElement('p');
-                    const capitalizedKey = key.charAt(0).toUpperCase() + key.slice(1);
-                    p.innerHTML = `<span class="fw-600">${capitalizedKey}:</span> ${value}`;
-                    sidebarContent.appendChild(p);
-                }
-            }, 300);
-        }
-
-        return weatherData;
+        renderWeatherData(data);
+        return data.weather;
     } catch (error) {
         console.error('Error fetching weather data:', error);
         return null;
     }
 };
 
+const getStationById = (id, stations) => stations.find((s) => String(s.id) === String(id));
+
+const setupSidebarControls = (header, stationId) => {
+    const cBtn = document.querySelector('#celciusBtn');
+    const fBtn = document.querySelector('#fahrenheitBtn');
+    const saveBtn = document.querySelector('#saveBtn');
+
+    const handleUnitClick = async (unit) => {
+        cBtn.classList.toggle('active', unit === 'metric');
+        fBtn.classList.toggle('active', unit === 'imperial');
+        if (stationId) await loadWeatherData(stationId, unit);
+    };
+
+    const updateSaveIcon = () => {
+        if (!saveBtn) return;
+        saveBtn.classList.toggle('saved', isStationSaved(stationId));
+        saveBtn.setAttribute('title', isStationSaved(stationId) ? 'Unsave' : 'Save');
+    };
+
+    cBtn?.addEventListener('click', () => handleUnitClick('metric'));
+    fBtn?.addEventListener('click', () => handleUnitClick('imperial'));
+
+    saveBtn?.addEventListener('click', () => {
+        if (isStationSaved(stationId)) {
+            removeStationFromLocal(stationId);
+        } else {
+            saveStationToLocal(stationId);
+        }
+        updateSaveIcon();
+    });
+
+    updateSaveIcon();
+};
+
+const updateSidebar = (lat, lng, title = '', stationId = '') => {
+    if (stationId) window.location.hash = `#${stationId}`;
+    const sidebar = document.querySelector('#sidebarContent');
+    if (!sidebar) return;
+
+    sidebar.innerHTML = '';
+
+    const header = document.createElement('div');
+    header.className = 'sidebar-header';
+    header.setAttribute('data-id', stationId);
+
+    const tempBtns = document.createElement('div');
+    tempBtns.className = 'temp-buttons';
+    tempBtns.innerHTML = `
+        <button id="celciusBtn" class="active">${__('Celcius', 'webnorthcodechallenge')} /</button>
+        <button id="fahrenheitBtn">&nbsp;${__('Fahrenheit', 'webnorthcodechallenge')}</button>
+    `;
+
+    const saveBtn = document.createElement('button');
+    saveBtn.id = 'saveBtn';
+    saveBtn.innerHTML = `<svg width="19" height="25" viewBox="0 0 19 25" fill="none" xmlns="http://www.w3.org/2000/svg">
+<path fill-rule="evenodd" clip-rule="evenodd" d="M0.53125 2.25L1.8125 0.96875H17.1875L18.4688 2.25V24.9985L9.5 19.6837L0.53125 24.9985V2.25ZM3.09375 3.53125V20.5015L9.5 16.7051L15.9062 20.5015V3.53125H3.09375Z" fill="#EEEEEE"/>
+</svg>`;
+
+    header.appendChild(tempBtns);
+    header.appendChild(saveBtn);
+    sidebar.appendChild(header);
+
+    const content = document.createElement('div');
+    content.id = 'sidebarCityContent';
+    sidebar.appendChild(content);
+
+    setupSidebarControls(header, stationId);
+};
+
 document.addEventListener('DOMContentLoaded', () => {
-    if (
-        typeof webnorthCodeChallengeSettings === 'undefined' ||
-        !Array.isArray(webnorthCodeChallengeSettings.weather_stations)
-    ) {
+    if (!Array.isArray(webnorthCodeChallengeSettings?.weather_stations)) {
         console.warn('No weather stations data found.');
         return;
     }
@@ -87,9 +175,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const map = L.map('mapWrap').setView([firstStation.lat, firstStation.lng], 6);
 
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution:
-            '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
     }).addTo(map);
+
+    const markers = {};
 
     stations.forEach((station) => {
         const lat = parseFloat(station.lat);
@@ -104,127 +193,72 @@ document.addEventListener('DOMContentLoaded', () => {
                 station.title
             );
 
-        marker.on('click', async () => {
-            marker
-                .setPopupContent(
-                    `${__('Latitude', 'webnorthcodechallenge')}: ${lat}<br>` +
-                    `${__('Longitude', 'webnorthcodechallenge')}: ${lng}<br>` +
-                    station.title
-                )
-                .openPopup();
-            updateSidebar(lat, lng, station.title, station.id);
+        markers[station.id] = marker;
 
-            const weatherData = await loadWeatherData(station.id);
-            if (weatherData) {
-                console.log('Weather data for station', station.id, weatherData);
-            }
+        marker.on('click', async () => {
+            marker.openPopup();
+            updateSidebar(lat, lng, station.title, station.id);
+            await loadWeatherData(station.id);
         });
     });
 
-    // Handle map click to activate closest weather station
-    map.on('click', async function (e) {
-        const clickedLat = e.latlng.lat;
-        const clickedLng = e.latlng.lng;
+    map.on('click', async (e) => {
+        const { lat: clickedLat, lng: clickedLng } = e.latlng;
 
-        // Calculate distance using the Haversine formula
         const getDistance = (lat1, lng1, lat2, lng2) => {
-            const toRad = (deg) => deg * (Math.PI / 180);
-            const R = 6371; // Earth's radius in km
+            const toRad = deg => deg * (Math.PI / 180);
+            const R = 6371;
             const dLat = toRad(lat2 - lat1);
             const dLng = toRad(lng2 - lng1);
-            const a =
-                Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+            const a = Math.sin(dLat / 2) ** 2 +
                 Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) *
-                Math.sin(dLng / 2) * Math.sin(dLng / 2);
-            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-            return R * c;
+                Math.sin(dLng / 2) ** 2;
+            return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
         };
 
-        let closestStation = null;
-        let minDistance = Infinity;
+        let closest = null;
+        let minDist = Infinity;
 
-        stations.forEach((station) => {
-            const distance = getDistance(clickedLat, clickedLng, station.lat, station.lng);
-            if (distance < minDistance) {
-                minDistance = distance;
-                closestStation = station;
+        for (const station of stations) {
+            const dist = getDistance(clickedLat, clickedLng, station.lat, station.lng);
+            if (dist < minDist) {
+                minDist = dist;
+                closest = station;
             }
-        });
+        }
 
-        if (closestStation) {
-            const { lat, lng, title, id } = closestStation;
-            map.setView([lat, lng], 7);
-            updateSidebar(lat, lng, title, id);
-            const weatherData = await loadWeatherData(id);
-            if (weatherData) {
-                console.log('Weather data (map click) for station', id, weatherData);
-            }
+        if (closest) {
+            map.setView([closest.lat, closest.lng], 7);
+            markers[closest.id]?.openPopup();
+            updateSidebar(closest.lat, closest.lng, closest.title, closest.id);
+            await loadWeatherData(closest.id);
         }
     });
 
+    // Load station from hash (e.g., map#3)
+    const loadFromHash = async () => {
+        const hash = window.location.hash.replace('#', '');
+        if (!hash) return;
 
-    function updateSidebar(lat, lng, title = '', stationId = '') {
-        if (stationId) {
-            window.location.hash = `#${stationId}`;
+        const station = getStationById(hash, stations);
+        if (!station) return;
+
+        const mapElement = document.getElementById('mapWrap');
+        if (mapElement) {
+            mapElement.scrollIntoView({ behavior: 'smooth' });
         }
 
-        const sidebar = document.querySelector('#sidebarContent');
-        if (!sidebar) return;
+        // Center map, open popup, and load data
+        map.setView([station.lat, station.lng], 7);
+        markers[station.id]?.openPopup();
+        updateSidebar(station.lat, station.lng, station.title, station.id);
+        await loadWeatherData(station.id);
+    };
 
-        sidebar.innerHTML = '';
-
-        const header = document.createElement('div');
-        header.className = 'sidebar-header';
-        header.setAttribute('data-id', stationId);
-
-        const tempBtns = document.createElement('div');
-        tempBtns.className = 'temp-buttons';
-
-        const cBtn = document.createElement('button');
-        cBtn.id = 'celciusBtn';
-        cBtn.classList.add('active');
-        cBtn.textContent = __('Celcius', 'webnorthcodechallenge') + ' /';
-
-        const fBtn = document.createElement('button');
-        fBtn.id = 'fahrenheitBtn';
-        fBtn.innerHTML = '&nbsp;' + __('Fahrenheit', 'webnorthcodechallenge');
-
-        tempBtns.appendChild(cBtn);
-        tempBtns.appendChild(fBtn);
-
-        const saveBtn = document.createElement('button');
-        saveBtn.id = 'saveBtn';
-        saveBtn.innerHTML = `
-            <svg width="19" height="25" viewBox="0 0 19 25" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path fill-rule="evenodd" clip-rule="evenodd"
-                      d="M0.53125 2.25L1.8125 0.96875H17.1875L18.4688 2.25V24.9985L9.5 19.6837L0.53125 24.9985V2.25ZM3.09375 3.53125V20.5015L9.5 16.7051L15.9062 20.5015V3.53125H3.09375Z"
-                      fill="#EEEEEE"/>
-            </svg>`;
-
-        header.appendChild(tempBtns);
-        header.appendChild(saveBtn);
-        sidebar.appendChild(header);
-
-        const content = document.createElement('div');
-        content.id = 'sidebarCityContent';
-        sidebar.appendChild(content);
-
-        // Attach click listeners for temperature unit buttons
-        cBtn.addEventListener('click', async () => {
-            cBtn.classList.add('active');
-            fBtn.classList.remove('active');
-            const id = header.getAttribute('data-id');
-            if (id) await loadWeatherData(id, 'metric');
-        });
-
-        fBtn.addEventListener('click', async () => {
-            fBtn.classList.add('active');
-            cBtn.classList.remove('active');
-            const id = header.getAttribute('data-id');
-            if (id) await loadWeatherData(id, 'imperial');
-        });
-    }
+    window.addEventListener('hashchange', loadFromHash);
+    loadFromHash();
 });
+
 
 
 // Initialize the sidebar toggle functionality

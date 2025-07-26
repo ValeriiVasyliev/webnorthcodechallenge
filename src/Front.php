@@ -80,7 +80,7 @@ class Front {
 		// Check if the current page is the 'map' page.
 		if ( is_page( 'map' ) ) {
 
-			// Leaflet CSS
+			// Leaflet CSS.
 			wp_enqueue_style(
 				'leaflet',
 				'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css',
@@ -88,7 +88,7 @@ class Front {
 				'1.9.4'
 			);
 
-			// Plugin styles
+			// Plugin styles.
 			wp_enqueue_style(
 				'webnorthcodechallenge-style',
 				plugins_url( 'styles/css/style.css', WEBNORTH_CODE_CHALLENGE_PLUGIN_FILE ),
@@ -96,7 +96,7 @@ class Front {
 				filemtime( $this->plugin->plugin_dir() . '/styles/css/style.css' )
 			);
 
-			// Leaflet JS
+			// Leaflet JS.
 			wp_enqueue_script(
 				'leaflet',
 				'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js',
