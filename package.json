@@ -1,0 +1,20 @@
+{
+  "devDependencies": {
+    "autoprefixer": "^10.4.20",
+    "npm-run-all": "^4.1.5",
+    "postcss": "^8.5.2",
+    "postcss-cli": "^11.0.0",
+    "sass": "^1.84.0",
+    "uglify-js": "^3.17.4"
+  },
+  "scripts": {
+    "compile": "sass --watch styles/scss/:styles/css/ --no-source-map --style=compressed --silence-deprecation=import",
+    "prefix": "postcss --watch styles/css/*.css --no-map --use autoprefixer --dir styles/css/",
+    "minify:js": "mkdir -p js/min && for f in js/*.js; do case \"$f\" in *.min.js) ;; *) uglifyjs \"$f\" -c -m -o \"js/min/$(basename \"${f%.js}.js\")\" ;; esac; done",
+    "dev": "npm-run-all --parallel compile prefix",
+    "build:compile": "sass styles/scss/:styles/css/ --no-source-map --style=compressed --silence-deprecation=import",
+    "build:prefix": "postcss styles/css/*.css --no-map --use autoprefixer --dir styles/css/",
+    "build:js": "npm run minify:js",
+    "build": "npm-run-all build:compile build:prefix build:js"
+  }
+}

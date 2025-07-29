@@ -1,0 +1,63 @@
+<?xml version="1.0"?>
+<ruleset name="WordPress Plugin Coding Standards">
+	<description>A custom set of code standard rules to check for WordPress plugins.</description>
+
+	<!-- What to scan -->
+	<file>.</file>
+
+	<!-- Excluded paths -->
+	<exclude-pattern>*/build/*</exclude-pattern>
+	<exclude-pattern>*/assets/*</exclude-pattern>
+	<exclude-pattern>*/languages/*</exclude-pattern>
+	<exclude-pattern>*/lib/*</exclude-pattern>
+	<exclude-pattern>*/node_modules/*</exclude-pattern>
+	<exclude-pattern>*/src/js/*</exclude-pattern>
+	<exclude-pattern>*/vendor/*</exclude-pattern>
+	<exclude-pattern>*\.js</exclude-pattern>
+	<exclude-pattern>*\.mo</exclude-pattern>
+	<exclude-pattern>*\.po</exclude-pattern>
+	<exclude-pattern>*\.twig</exclude-pattern>
+	<exclude-pattern>*\.css</exclude-pattern>
+	<exclude-pattern>*\.scss</exclude-pattern>
+	<exclude-pattern>*/.codeception/*</exclude-pattern>
+	<exclude-pattern>*/tests/*</exclude-pattern>
+	<exclude-pattern>*/dummy-plugin-dir/*</exclude-pattern>
+
+	<!-- How to scan -->
+	<arg value="sp"/> <!-- Show sniff and progress -->
+	<arg name="extensions" value="php"/>
+	<arg name="parallel" value="12"/>
+	<arg name="cache" value=".phpcs.cache"/>
+
+	<!-- PHP version compatibility -->
+	<config name="testVersion" value="8.0"/>
+
+	<!-- Rulesets -->
+	<rule ref="PHPCompatibility"/>
+	<rule ref="PHPCompatibilityWP"/>
+
+	<!-- WordPress Coding Standards -->
+	<config name="minimum_supported_wp_version" value="4.7"/>
+	<rule ref="WordPress"/>
+
+	<!-- Custom rule overrides -->
+
+	<!-- Allow short array syntax -->
+	<rule ref="Generic.Arrays.DisallowShortArraySyntax.Found">
+		<severity>0</severity>
+	</rule>
+
+	<!-- Disable filename restrictions -->
+	<rule ref="WordPress.Files.FileName.InvalidClassFileName">
+		<severity>0</severity>
+	</rule>
+	<rule ref="WordPress.Files.FileName.NotHyphenatedLowercase">
+		<severity>0</severity>
+	</rule>
+
+	<!-- Replace deprecated sniff -->
+	<rule ref="Generic.WhiteSpace.LanguageConstructSpacing"/>
+
+	<!-- Error reporting setting -->
+	<ini name="error_reporting" value="E_ALL &amp; ~E_DEPRECATED"/>
+</ruleset>
