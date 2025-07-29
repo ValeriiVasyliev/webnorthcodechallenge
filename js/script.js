@@ -190,14 +190,19 @@ const updateSidebar = (lat, lng, title = '', stationId = '') => {
 
 // Initialize the map and markers
 document.addEventListener('DOMContentLoaded', () => {
-    if (!Array.isArray(webnorthCodeChallengeSettings?.weather_stations)) {
-        console.warn('No weather stations data found.');
-        return;
-    }
+    const stations = Array.isArray(webnorthCodeChallengeSettings?.weather_stations)
+        ? webnorthCodeChallengeSettings.weather_stations
+        : [];
 
-    const stations = webnorthCodeChallengeSettings.weather_stations;
-    const firstStation = stations[0];
-    const map = L.map('mapWrap').setView([firstStation.lat, firstStation.lng], 6);
+    const validStations = stations.filter(station =>
+        !isNaN(parseFloat(station.lat)) && !isNaN(parseFloat(station.lng))
+    );
+
+    // Use first valid station or fallback location just to center the map (e.g., Central Europe)
+    const initialLat = validStations[0] ? parseFloat(validStations[0].lat) : 48.5;
+    const initialLng = validStations[0] ? parseFloat(validStations[0].lng) : 10.0;
+
+    const map = L.map('mapWrap').setView([initialLat, initialLng], 5);
 
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
