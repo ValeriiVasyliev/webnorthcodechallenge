@@ -17,6 +17,7 @@ use WP_Query;
  * Class REST
  */
 class REST {
+
 	/**
 	 * REST namespace.
 	 */
@@ -67,17 +68,10 @@ class REST {
 				'callback'            => array( $this, 'get_weather_station' ),
 				'permission_callback' => '__return_true',
 				'args'                => array(
-					'id'    => array(
+					'id' => array(
 						'required'          => true,
 						'validate_callback' => function ( $param ) {
 							return is_numeric( $param );
-						},
-					),
-					'units' => array(
-						'required'          => false,
-						'default'           => 'metric',
-						'sanitize_callback' => function ( $param ) {
-							return in_array( $param, array( 'metric', 'imperial' ), true ) ? $param : 'metric';
 						},
 					),
 				),
@@ -89,10 +83,11 @@ class REST {
 	 * Callback for getting a weather station by ID.
 	 *
 	 * @param WP_REST_Request $request The request object.
+	 * @param WP_Query|null   $query Optional WP_Query object for custom queries.
 	 *
 	 * @return WP_REST_Response|WP_Error
 	 */
-	public function get_weather_station( WP_REST_Request $request ): WP_REST_Response|WP_Error {
+	public function get_weather_station( WP_REST_Request $request, WP_Query $query = null ): WP_REST_Response|WP_Error {
 		// Verify nonce for security.
 		if ( ! wp_verify_nonce( sanitize_text_field( $request->get_header( 'X-WP-Nonce' ) ?? '' ), 'wp_rest' ) ) {
 			return new WP_Error( 'invalid_request', __( 'Invalid request.', 'webnorthcodechallenge' ) );
@@ -107,7 +102,7 @@ class REST {
 		}
 
 		// Query the database for the weather station.
-		$query = new WP_Query(
+		$query = $query ?? new WP_Query(
 			array(
 				'post_type'      => 'weather_station',
 				'p'              => $station_id,
@@ -135,17 +130,53 @@ class REST {
 		$lng = get_post_meta( $post->ID, 'lng', true );
 
 		if ( ! empty( $lat ) && ! empty( $lng ) ) {
-			$units = $request->get_param( 'units' ) ? $request->get_param( 'units' ) : 'metric'; // Replaced short ternary.
+			$weather_data    = get_post_meta( $post->ID, 'weather_data', true );
+			$last_updated_ts = get_post_meta( $post->ID, 'weather_data_updated', true );
+			$needs_update    = true;
 
-			// Get weather data from the API.
-			$api = $this->plugin->get_api()->get_weather( (float) $lat, (float) $lng, $units );
+			// Check if valid weather data and timestamp exist.
+			if ( is_array( $weather_data ) && ! empty( $last_updated_ts ) ) {
+				$age_seconds = time() - (int) $last_updated_ts;
+				if ( $age_seconds < DAY_IN_SECONDS ) {
+					$needs_update = false;
+				}
+			}
 
-			if ( ! $api ) {
-				return new WP_Error( 'weather_data_error', __( 'Could not retrieve weather data.', 'webnorthcodechallenge' ), array( 'status' => 500 ) );
+			if ( $needs_update ) {
+				// Fetch weather data for both units.
+				$api_metric   = $this->plugin->get_api()->get_weather( (float) $lat, (float) $lng, 'metric' );
+				$api_imperial = $this->plugin->get_api()->get_weather( (float) $lat, (float) $lng, 'imperial' );
+
+				// Extract and fallback to empty arrays if needed.
+				$temp_metric   = $api_metric['main'] ?? array();
+				$temp_imperial = $api_imperial['main'] ?? array();
+
+				// Remove 'main' from metric data to avoid duplication.
+				unset( $api_metric['main'] );
+
+				// Prepare final structured weather data.
+				$weather_data         = $api_metric;
+				$weather_data['main'] = array(
+					'metric'   => $temp_metric,
+					'imperial' => $temp_imperial,
+				);
+
+				// Save to post meta.
+				update_post_meta( $post->ID, 'weather_data', $weather_data );
+				update_post_meta( $post->ID, 'weather_data_updated', time() );
+			}
+
+			// Final validation: ensure we still have usable data.
+			if ( empty( $weather_data ) || ! is_array( $weather_data ) ) {
+				return new WP_Error(
+					'weather_data_error',
+					__( 'Could not retrieve weather data.', 'webnorthcodechallenge' ),
+					array( 'status' => 500 )
+				);
 			}
 
 			// Merge the weather data into the response.
-			$data['weather'] = $api;
+			$data['weather'] = $weather_data;
 		}
 
 		return new WP_REST_Response( $data, 200 );

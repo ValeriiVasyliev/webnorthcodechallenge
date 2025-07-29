@@ -1,0 +1,3 @@
+{
+  "redefinable-internals": ["dirname", "filemtime","exit","file_exists"]
+}

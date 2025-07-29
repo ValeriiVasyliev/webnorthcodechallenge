@@ -134,9 +134,9 @@ class Front {
 			// Register the main script for the front-end.
 			wp_register_script(
 				'webnorth_code_challenge_front',
-				$this->plugin->plugin_url() . '/js/script.js',
+				$this->plugin->plugin_url() . '/js/min/script.js',
 				array( 'wp-i18n' ),
-				filemtime( $this->plugin->plugin_dir() . '/js/script.js' ),
+				filemtime( $this->plugin->plugin_dir() . '/js/min/script.js' ),
 				1
 			);
 
@@ -148,6 +148,7 @@ class Front {
 					'nonce'            => wp_create_nonce( 'wp_rest' ),
 					'rest_url'         => rest_url( 'webnorthcodechallenge/v1/' ),
 					'weather_stations' => $weather_stations,
+					'logo'             => plugins_url( 'img/Logo.svg', WEBNORTH_CODE_CHALLENGE_PLUGIN_FILE ),
 				)
 			);
 

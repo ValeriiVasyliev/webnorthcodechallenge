@@ -129,7 +129,7 @@ class Plugin {
 			'has_archive'         => false,
 			'hierarchical'        => false,
 			'menu_position'       => 5,
-			'supports'            => array( 'title', 'custom-fields' ),
+			'supports'            => array( 'title' ),
 		);
 
 		register_post_type( 'weather_station', $args );

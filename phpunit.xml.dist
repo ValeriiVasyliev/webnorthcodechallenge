@@ -23,5 +23,6 @@
     <php>
         <ini name="display_errors" value="On" />
         <ini name="error_reporting" value="-1" />
+        <ini name="memory_limit" value="1024M"/>
     </php>
 </phpunit>

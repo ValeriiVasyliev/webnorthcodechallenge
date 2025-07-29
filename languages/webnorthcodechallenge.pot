@@ -9,7 +9,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2025-07-26T09:00:43+00:00\n"
+"POT-Creation-Date: 2025-07-29T00:42:32+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: webnorthcodechallenge\n"
@@ -31,16 +31,54 @@ msgid "https://www.codeable.io/developers/valerii-vasyliev/?ref=OaT0y"
 msgstr ""
 
 #: plugin.php:47
-#: src/Admin.php:64
+#: src/Admin.php:66
 msgid "Map Page"
 msgstr ""
 
-#: src/Admin.php:83
+#: src/Admin.php:84
 msgid "OpenWeatherMap Settings"
 msgstr ""
 
-#: src/Admin.php:92
+#: src/Admin.php:93
 msgid "API Key"
+msgstr ""
+
+#: src/Admin.php:125
+msgid "Weather Station Details"
+msgstr ""
+
+#: src/Admin.php:152
+#: js/min/script.js:10
+#: js/script.js:216
+msgid "Latitude"
+msgstr ""
+
+#: src/Admin.php:154
+msgid "Enter the latitude of the weather station."
+msgstr ""
+
+#: src/Admin.php:159
+#: js/min/script.js:10
+#: js/script.js:217
+msgid "Longitude"
+msgstr ""
+
+#: src/Admin.php:161
+msgid "Enter the longitude of the weather station."
+msgstr ""
+
+#: src/Admin.php:166
+#: js/min/script.js:5
+#: js/script.js:61
+msgid "Weather Data"
+msgstr ""
+
+#: src/Admin.php:172
+msgid "No weather data available."
+msgstr ""
+
+#: src/Admin.php:174
+msgid "This is the stored weather data in JSON format. It is read-only."
 msgstr ""
 
 #: src/Plugin.php:103
@@ -93,24 +131,26 @@ msgstr ""
 msgid "Settings"
 msgstr ""
 
-#: src/REST.php:98
+#: src/REST.php:93
 msgid "Invalid request."
 msgstr ""
 
-#: src/REST.php:106
+#: src/REST.php:101
 msgid "Invalid station ID."
 msgstr ""
 
-#: src/REST.php:121
+#: src/REST.php:116
 msgid "Weather station not found."
 msgstr ""
 
-#: src/REST.php:144
+#: src/REST.php:173
 msgid "Could not retrieve weather data."
 msgstr ""
 
 #: templates/map.php:25
-#: templates/map.php:44
+#: templates/map.php:45
+#: js/min/script.js:11
+#: js/script.js:338
 msgid "WebNorth"
 msgstr ""
 
@@ -122,31 +162,34 @@ msgstr ""
 msgid "Scroll"
 msgstr ""
 
-#: templates/map.php:47
+#: templates/map.php:48
+#: js/min/script.js:12
+#: js/script.js:343
 msgid "Click on the map to get weather data"
 msgstr ""
 
+#: templates/map.php:51
 #: js/min/script.js:5
-#: js/script.js:54
-msgid "Weather Data"
+#: js/script.js:123
+#: js/script.js:299
+msgid "My Locations"
 msgstr ""
 
 #: js/min/script.js:6
-#: js/script.js:146
+#: js/script.js:170
 msgid "Celcius"
 msgstr ""
 
 #: js/min/script.js:7
-#: js/script.js:147
+#: js/script.js:171
 msgid "Fahrenheit"
 msgstr ""
 
 #: js/min/script.js:10
-#: js/script.js:191
-msgid "Latitude"
+#: js/script.js:329
+msgid "No locations"
 msgstr ""
 
-#: js/min/script.js:10
-#: js/script.js:192
-msgid "Longitude"
+#: js/script.js:298
+msgid "Close"
 msgstr ""

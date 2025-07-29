@@ -34,6 +34,7 @@ defined( 'ABSPATH' ) || exit;
 <div class="header-spacer"></div>
 
 <main class="main">
+	<div class="main-gradient"></div>
 	<div id="scroll-trigger"></div>
 
 	<aside class="sidebar">
@@ -47,6 +48,7 @@ defined( 'ABSPATH' ) || exit;
 				<?php esc_html_e( 'Click on the map to get weather data', 'webnorthcodechallenge' ); ?>
 			</p>
 		</div>
+		<button id="sidebarSavedLocationsBtn"><?php esc_html_e( 'My Locations', 'webnorthcodechallenge' ); ?></button>
 	</aside>
 
 	<div class="map" id="mapWrap"></div>

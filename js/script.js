@@ -6,6 +6,7 @@ if (typeof wp !== 'undefined' && wp.i18n && typeof __ === 'undefined') {
 
 const LOCAL_STORAGE_KEY = 'savedStations';
 
+// Get saved stations from local storage
 const getSavedStations = () => {
     try {
         const raw = localStorage.getItem(LOCAL_STORAGE_KEY);
@@ -15,32 +16,37 @@ const getSavedStations = () => {
     }
 };
 
+// Save a station to local storage
 const saveStationToLocal = (id) => {
     const saved = new Set(getSavedStations());
     saved.add(String(id));
     localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify([...saved]));
 };
 
+// Remove a station from local storage
 const removeStationFromLocal = (id) => {
     const saved = new Set(getSavedStations());
     saved.delete(String(id));
     localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify([...saved]));
 };
 
+// Check if a station is saved in local storage
 const isStationSaved = (id) => {
     return getSavedStations().includes(String(id));
 };
 
-
+// Get WebNorth Code Challenge settings from global variable
 const getWebNorthCodeChallengeSettings = () => ({
     restUrl: webnorthCodeChallengeSettings?.rest_url ?? '',
     nonce: webnorthCodeChallengeSettings?.nonce ?? ''
 });
 
-const renderWeatherData = (data) => {
+// Render weather data in the sidebar
+const renderWeatherData = (data, unit) => {
     const sidebarContent = document.querySelector('#sidebarCityContent');
     if (!sidebarContent) return;
 
+    // Show loading animation
     sidebarContent.innerHTML = `
         <div class="loading">
             <div class="loader"></div>
@@ -50,20 +56,29 @@ const renderWeatherData = (data) => {
     requestAnimationFrame(() => {
         setTimeout(() => {
             sidebarContent.innerHTML = '';
+
             const title = document.createElement('h3');
             title.textContent = data.title || __('Weather Data', 'webnorthcodechallenge');
             sidebarContent.appendChild(title);
 
-            for (const [key, value] of Object.entries(data.weather.main)) {
-                const p = document.createElement('p');
-                const capitalizedKey = key.charAt(0).toUpperCase() + key.slice(1);
-                p.innerHTML = `<span class="fw-600">${capitalizedKey}:</span> ${value}`;
-                sidebarContent.appendChild(p);
-            }
+            const weatherInfo = data.weather.weather?.[0] || {};
+            const main = data.weather.main?.[unit] || {};
+            const tempUnit = unit === 'imperial' ? '°F' : '°C';
+
+            const lines = [
+                `<p><span class="fw-600">Weather:</span> ${weatherInfo.main || 'N/A'} - ${weatherInfo.description || 'N/A'}</p>`,
+                `<p><span class="fw-600">Temp:</span> ${main.temp ?? 'N/A'} / ${main.feels_like ?? 'N/A'} ${tempUnit}</p>`,
+                `<p><span class="fw-600">Pressure:</span> ${main.pressure ?? 'N/A'}</p>`,
+                `<p><span class="fw-600">Humidity:</span> ${main.humidity ?? 'N/A'}</p>`
+            ];
+
+            sidebarContent.innerHTML += lines.join('');
         }, 300);
     });
 };
 
+
+// Load weather data for a specific station ID
 const loadWeatherData = async (id, units = 'metric') => {
     const { restUrl, nonce } = getWebNorthCodeChallengeSettings();
     if (!restUrl || !nonce) {
@@ -72,7 +87,7 @@ const loadWeatherData = async (id, units = 'metric') => {
     }
 
     try {
-        const response = await fetch(`${restUrl}weather-station/${id}?units=${units}`, {
+        const response = await fetch(`${restUrl}weather-station/${id}`, {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',
@@ -87,7 +102,7 @@ const loadWeatherData = async (id, units = 'metric') => {
             return null;
         }
 
-        renderWeatherData(data);
+        renderWeatherData(data, units);
         return data.weather;
     } catch (error) {
         console.error('Error fetching weather data:', error);
@@ -95,12 +110,20 @@ const loadWeatherData = async (id, units = 'metric') => {
     }
 };
 
+// Get station by ID from the list of stations
 const getStationById = (id, stations) => stations.find((s) => String(s.id) === String(id));
 
+// Setup sidebar controls for temperature unit and save button
 const setupSidebarControls = (header, stationId) => {
     const cBtn = document.querySelector('#celciusBtn');
     const fBtn = document.querySelector('#fahrenheitBtn');
     const saveBtn = document.querySelector('#saveBtn');
+
+    const toggleBtn = document.getElementById('sidebarSavedLocationsBtn');
+    toggleBtn.textContent = __('My Locations', 'webnorthcodechallenge');
+
+    const sidebarContent = document.getElementById('sidebarContent');
+    sidebarContent.classList.remove('active');
 
     const handleUnitClick = async (unit) => {
         cBtn.classList.toggle('active', unit === 'metric');
@@ -129,6 +152,7 @@ const setupSidebarControls = (header, stationId) => {
     updateSaveIcon();
 };
 
+// Update sidebar with initial station data
 const updateSidebar = (lat, lng, title = '', stationId = '') => {
     if (stationId) window.location.hash = `#${stationId}`;
     const sidebar = document.querySelector('#sidebarContent');
@@ -164,6 +188,7 @@ const updateSidebar = (lat, lng, title = '', stationId = '') => {
     setupSidebarControls(header, stationId);
 };
 
+// Initialize the map and markers
 document.addEventListener('DOMContentLoaded', () => {
     if (!Array.isArray(webnorthCodeChallengeSettings?.weather_stations)) {
         console.warn('No weather stations data found.');
@@ -259,6 +284,72 @@ document.addEventListener('DOMContentLoaded', () => {
     loadFromHash();
 });
 
+// Saved locations sidebar toggle.
+document.addEventListener('DOMContentLoaded', () => {
+    const toggleBtn = document.getElementById('sidebarSavedLocationsBtn');
+    const sidebarContent = document.getElementById('sidebarContent');
+
+    toggleBtn.addEventListener('click', () => {
+        sidebarContent.classList.toggle('active');
+        const isActive = sidebarContent.classList.contains('active');
+
+        // Update toggle button text
+        toggleBtn.textContent = isActive
+            ? __('Close', 'webnorthcodechallenge')
+            : __('My Locations', 'webnorthcodechallenge');
+
+        sidebarContent.innerHTML = ''; // Always clear first
+
+        if (isActive) {
+            const savedStations = getSavedStations();
+
+            if (savedStations.length > 0) {
+                savedStations.forEach((id) => {
+                    const station = getStationById(id, webnorthCodeChallengeSettings.weather_stations);
+                    if (station) {
+                        const heading = document.createElement('h3');
+                        heading.textContent = station.title;
+
+                        heading.addEventListener('click', async () => {
+                            const mapElement = document.getElementById('mapWrap');
+                            if (mapElement) {
+                                mapElement.scrollIntoView({ behavior: 'smooth' });
+                            }
+                            const lat = parseFloat(station.lat);
+                            const lng = parseFloat(station.lng);
+                            updateSidebar(lat, lng, station.title, station.id);
+                            await loadWeatherData(station.id);
+                        });
+
+                        sidebarContent.appendChild(heading);
+                    }
+                });
+            } else {
+                const noLocationsText = document.createElement('p');
+                noLocationsText.textContent = __('No locations', 'webnorthcodechallenge');
+                sidebarContent.appendChild(noLocationsText);
+            }
+        } else {
+
+            // Add logo + instruction text
+            const logoDiv = document.createElement('div');
+            logoDiv.className = 'logo';
+            logoDiv.innerHTML = `
+                <img src="${webnorthCodeChallengeSettings.logo}" alt="${__('WebNorth', 'webnorthcodechallenge')}" />
+            `;
+
+            const instructionText = document.createElement('p');
+            instructionText.className = 'mt-50 fw-600 text-white';
+            instructionText.textContent = __('Click on the map to get weather data', 'webnorthcodechallenge');
+
+            sidebarContent.appendChild(logoDiv);
+            sidebarContent.appendChild(instructionText);
+        }
+    });
+});
+
+
+
 
 
 // Initialize the sidebar toggle functionality
@@ -332,8 +423,6 @@ document.addEventListener("DOMContentLoaded", function () {
                     if (prop === 'opacity') {
                         el.style.opacity = lerp(s.val, e.val, t);
                     } else if (prop === 'visibility') {
-                        console.log(t);
-
                         el.style.visibility = t > 0.99 ? 'hidden' : 'visible';
                     } else if (s.unit === e.unit) {
                         el.style[prop] = lerp(s.val, e.val, t) + s.unit;
@@ -378,6 +467,10 @@ document.addEventListener("DOMContentLoaded", function () {
 
     scrollAnim(document.querySelector('header.header'), {
         '0%': { opacity: '1', visibility: 'visible' },
+        '100%': { opacity: '0', visibility: 'hidden' }
+    });
+    scrollAnim(document.querySelector('.main-gradient'), {
+        '90%': { opacity: '1', visibility: 'visible' },
         '100%': { opacity: '0', visibility: 'hidden' }
     });
 });

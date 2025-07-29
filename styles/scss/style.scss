@@ -6,8 +6,9 @@ html,
 body {
     font-family: Roboto, sans-serif;
     color: $textWhite;
-    scrollbar-gutter: stable;
+    
 
+    scrollbar-gutter: stable;
     scrollbar-width: thin;
     scrollbar-color: #8a8a8a $primaryDark;
 
@@ -45,6 +46,15 @@ body {
     min-height: 100vh;
     max-height: 100vh;
     background: $primaryDark;
+}
+.main-gradient {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 10001;
+    background: linear-gradient(180deg, #28282C 0%, rgba(115, 115, 115, 0) 100%);
 }
 #scroll-trigger {
     position: absolute;
@@ -122,6 +132,9 @@ header {
     max-height: 100vh;
 
     .sidebar {
+        display: flex;
+        flex-direction: column;
+        
         position: relative;
         overflow: hidden;
         flex: 0 0 0%;
@@ -139,6 +152,19 @@ header {
 
         & > #sidebarMobileCurtain {
             display: none;
+        }
+
+        & > #sidebarSavedLocations {
+            display: none;
+            &.active {
+                display: block;
+            }
+        }
+        & > #sidebarSavedLocationsBtn {
+            background: none;
+            border: none;
+            color: $textWhite;
+            margin: auto 0 0 auto;
         }
 
         &-header {
@@ -184,7 +210,7 @@ header {
                     }
                 }
 
-                &.active {
+                &.saved {
                     svg {
                         background: #eeeeee;
                     }
@@ -238,7 +264,7 @@ header {
     }
 }
 
-
+/* Loading styles */
 #sidebarCityContent .loading {
     display: flex;
     justify-content: center;
@@ -258,5 +284,21 @@ header {
 @keyframes spin {
     0% { transform: rotate(0deg); }
     100% { transform: rotate(360deg); }
+}
+
+#sidebarContent h3 {
+    padding-bottom: 1rem; /* only bottom padding for spacing */
+    color: #eee;
+    cursor: pointer;
+    transition: background-color 0.3s ease, color 0.3s ease;
+    border-radius: 4px;
+}
+
+#sidebarContent h3:hover {
+    color: #fff;
+}
+
+#sidebarCityContent p:not(:last-child) {
+    padding-bottom: 0.5rem;
 }
 
